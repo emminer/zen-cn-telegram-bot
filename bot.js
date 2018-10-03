@@ -1,23 +1,25 @@
-const token = process.env.TOKEN;
+const Telegraf = require('telegraf');
 
-const Bot = require('node-telegram-bot-api');
-let bot;
+const bot = new Telegraf(process.env.TOKEN, { username: process.env.BOT_USERNAME });
+bot.command('start', (ctx) => ctx.reply(`
+你好，我是Zen中文机器人，我可以告诉你一些Zen的情况，发送"/zencommands"来看看我知道什么。
+`));
+bot.command('wechat', (ctx) => ctx.replyWithHTML('<b>官方微信</b>：ZenCashOfficial'));
+bot.command('zencommands', (ctx) => ctx.replyWithHTML(`
+/zencommands - 全部机器人指令
+/wechat - 官方微信
 
-if(process.env.NODE_ENV === 'production') {
-  bot = new Bot(token);
-  bot.setWebHook(process.env.HEROKU_URL + bot.token);
+更多功能我正在努力学习中,敬请期待。
+`));
+
+function run () {
+	if(process.env.NODE_ENV === 'production') {
+		bot.telegram.setWebhook(process.env.ENDPOINT_HEROKU_URL + process.env.SECURE_PATH);
+		bot.startWebhook(`/${process.env.SECURE_PATH}`, null, process.env.PORT);
+	}
+	else {
+		bot.startPolling();
+	}
 }
-else {
-  bot = new Bot(token, { polling: true });
-}
 
-console.log('Bot server started in the ' + process.env.NODE_ENV + ' mode');
-
-bot.on('message', (msg) => {
-  const name = msg.from.first_name;
-  bot.sendMessage(msg.chat.id, 'Hello, ' + name + '!').then(() => {
-    // reply sent!
-  });
-});
-
-module.exports = bot;
+module.exports = { run };
